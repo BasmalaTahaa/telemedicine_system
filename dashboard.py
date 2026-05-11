@@ -713,26 +713,32 @@ with tab_patients:
             updated   = str(row.get("last_updated", "") or "")[:19]
             rec_short = rec[:110] + ("…" if len(rec) > 110 else "")
 
+            # Pre-build fragments to avoid nested quotes inside f-string
+            alert_html = (
+                "<div class='pcard-alert'>⚠️ " + abnorm + "</div>"
+                if abnorm != "None" else ""
+            )
+            badge_bg  = RISK_BG.get(risk, "#44444415")
+            pid       = row["patient_id"]
+            case_type = row["case_type"]
+
+            card_html = (
+                "<div class='pcard " + extra + "' style='--card-color:" + color + ";'>"
+                "<div class='pcard-title'>"
+                "<span>" + icon + " <b>" + pid + "</b>"
+                "<span style='color:" + TEXT_MUTED + "; font-size:0.8rem; font-weight:400;'>"
+                "&nbsp;" + case_type + "</span></span>"
+                "<span class='risk-badge' style='--badge-color:" + color + "; --badge-bg:" + badge_bg + ";'>"
+                + risk + "</span></div>"
+                "<div class='pcard-readings'>" + readings_html + "</div>"
+                + alert_html +
+                "<div class='pcard-rec'>💊 " + rec_short + "</div>"
+                "<div class='pcard-time'>🕒 " + updated + "</div>"
+                "</div>"
+            )
+
             with card_cols[ci]:
-                st.markdown(f"""
-                <div class='pcard {extra}' style='--card-color:{color};'>
-                    <div class='pcard-title'>
-                        <span>{icon} <b>{row["patient_id"]}</b>
-                            <span style='color:{TEXT_MUTED}; font-size:0.8rem; font-weight:400;'>
-                                &nbsp;{row["case_type"]}
-                            </span>
-                        </span>
-                        <span class='risk-badge'
-                              style='--badge-color:{color}; --badge-bg:{RISK_BG.get(risk, "#44444415")};'>
-                            {risk}
-                        </span>
-                    </div>
-                    <div class='pcard-readings'>{readings_html}</div>
-                    {'<div class="pcard-alert">⚠️ ' + abnorm + '</div>' if abnorm != "None" else ""}
-                    <div class='pcard-rec'>💊 {rec_short}</div>
-                    <div class='pcard-time'>🕒 {updated}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(card_html, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — ADVANCED ANALYTICS
